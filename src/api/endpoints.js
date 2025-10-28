@@ -1,6 +1,7 @@
 import axios from "axios";
 import { SERVER_URL } from "../constants/constants";
 
+
 const BASE_URL = SERVER_URL;
 
 const api = axios.create({
@@ -80,10 +81,19 @@ export const toggleLike = async (id) => {
   return response.data;
 };
 
-export const create_post = async (description) => {
-  const response = await api.post("/create_post/", {
-    description: description,
+// Updated create_post to handle FormData with images and files
+export const create_post = async (formData) => {
+  const response = await api.post("/create_post/", formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
   });
+  return response.data;
+};
+
+// Delete post function
+export const delete_post = async (postId) => {
+  const response = await api.delete(`/delete_post/${postId}/`);
   return response.data;
 };
 
@@ -106,5 +116,29 @@ export const update_user = async (values) => {
   const response = await api.patch("/update_user/", values, {
     headers: { "Content-Type": "multipart/form-data" },
   });
+  return response.data;
+};
+
+// Comment related endpoints
+export const create_comment = async (postId, text) => {
+  const response = await api.post("/create_comment/", {
+    post_id: postId,
+    text: text,
+  });
+  return response.data;
+};
+
+export const delete_comment = async (commentId) => {
+  const response = await api.delete(`/delete_comment/${commentId}/`);
+  return response.data;
+};
+
+export const toggle_comment_like = async (commentId) => {
+  const response = await api.post("/toggle_comment_like/", { id: commentId });
+  return response.data;
+};
+
+export const get_post_comments = async (postId) => {
+  const response = await api.get(`/post_comments/${postId}/`);
   return response.data;
 };
