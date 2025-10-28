@@ -113,7 +113,7 @@ const Sidebar = ({ onItemClick }) => {
     { label: "Home", icon: "🏠", path: "/" },
     { label: "Search", icon: "🔍", path: "/search" },
     { label: "Create Post", icon: "✏️", path: "/create/post" },
-    { label: "Messages", icon: "💬", path: "/messages" },
+    { label: "Messages", icon: "💬", path: "/" },
     { label: "Settings", icon: "⚙️", path: "/settings" },
     { label: "Subscriptions", icon: "👤", path: "/subscriptions" },
   ];
