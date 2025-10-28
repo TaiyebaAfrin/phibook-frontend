@@ -130,13 +130,6 @@ const Settings = () => {
           Logout
         </Button>
       </VStack>
-      <Button
-        onClick={() => nav("/subscriptions")}
-        colorScheme="green"
-        w="100%"
-      >
-        💎 Upgrade Account
-      </Button>
     </Flex>
   );
 };
