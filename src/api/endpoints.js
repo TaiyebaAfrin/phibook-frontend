@@ -43,13 +43,7 @@ export const login = async (username, password) => {
   return response.data;
 };
 
-export const register = async (
-  username,
-  email,
-  firstName,
-  lastName,
-  password
-) => {
+export const register = async (username, email, firstName, lastName, password) => {
   const response = await api.post("/register/", {
     username: username,
     email: email,
@@ -87,8 +81,8 @@ export const create_post = async (description) => {
   return response.data;
 };
 
-export const get_posts = async (num) => {
-  const response = await api.get(`/get_posts/?page=${num}`);
+export const get_posts = async () => {
+  const response = await api.get(`/get_posts/`);
   return response.data;
 };
 
@@ -109,32 +103,21 @@ export const update_user = async (values) => {
   return response.data;
 };
 
-
-
-
-
-
-
 // Comment related endpoints
-export const create_comment = async (postId, text) => {
-  const response = await api.post("/create_comment/", {
-    post_id: postId,
-    text: text,
+export const create_comment = async (post_id, text) => {
+  const response = await api.post("/api/comments/create/", {
+    post_id: post_id,
+    text: text
   });
   return response.data;
 };
 
-export const delete_comment = async (commentId) => {
-  const response = await api.delete(`/delete_comment/${commentId}/`);
+export const get_post_comments = async (post_id) => {
+  const response = await api.get(`/api/comments/${post_id}/`);
   return response.data;
 };
 
-export const toggle_comment_like = async (commentId) => {
-  const response = await api.post("/toggle_comment_like/", { id: commentId });
-  return response.data;
-};
-
-export const get_post_comments = async (postId) => {
-  const response = await api.get(`/post_comments/${postId}/`);
+export const delete_comment = async (comment_id) => {
+  const response = await api.delete(`/api/comments/delete/${comment_id}/`);
   return response.data;
 };

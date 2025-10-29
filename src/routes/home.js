@@ -15,54 +15,90 @@ import {
   DrawerContent,
   DrawerCloseButton,
   IconButton,
-  useDisclosure 
+  useDisclosure,
+  Avatar,
+  useToast
 } from "@chakra-ui/react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { get_posts } from "../api/endpoints";
 import Post from "../components/post";
 
 const Home = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [nextPage, setNextPage] = useState(1);
+  const [nextPage, setNextPage] = useState(null);
+  const [loadingMore, setLoadingMore] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const toast = useToast();
   
   // Responsive values
   const sidebarDisplay = useBreakpointValue({ base: "none", lg: "block" });
   const mainPadding = useBreakpointValue({ base: "10px", md: "20px" });
 
+  // Fetch initial data function
+  const fetchInitialData = useCallback(async () => {
+    try {
+      const data = await get_posts();
+      
+      // Handle paginated response structure
+      if (data && data.results) {
+        // If backend returns paginated data
+        setPosts(data.results);
+        setNextPage(data.next ? 1 : null); // Fixed: use functional update
+      } else if (Array.isArray(data)) {
+        // If backend returns direct array
+        setPosts(data);
+        setNextPage(null);
+      } else {
+        setPosts([]);
+      }
+    } catch (error) {
+      console.error("Error getting posts:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load posts",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]); // Add toast as dependency
+
   // Load initial data on component mount
   useEffect(() => {
-    const fetchInitialData = async () => {
-      try {
-        const data = await get_posts(1);
-        setPosts(data.results);
-        setNextPage(data.next ? 2 : null);
-      } catch {
-        alert("error getting posts");
-      } finally {
-        setLoading(false);
-      }
-    };
-    
     fetchInitialData();
-  }, []);
+  }, [fetchInitialData]); // Add fetchInitialData as dependency
 
   const loadMorePosts = async () => {
-    if (nextPage) {
+    if (nextPage && !loadingMore) {
+      setLoadingMore(true);
       try {
         const data = await get_posts(nextPage);
-        setPosts(prevPosts => [...prevPosts, ...data.results]);
-        setNextPage(data.next ? nextPage + 1 : null);
-      } catch {
-        alert("error getting more posts");
+        if (data.results) {
+          setPosts(prevPosts => [...prevPosts, ...data.results]);
+          // Use functional update for nextPage
+          setNextPage(prevPage => data.next ? prevPage + 1 : null);
+        }
+      } catch (error) {
+        console.error("Error getting more posts:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load more posts",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      } finally {
+        setLoadingMore(false);
       }
     }
   };
 
   return (
     <Flex w="100%" minH="100vh">
-      {/* Mobile Menu Button - Black and White */}
+      {/* Mobile Menu Button */}
       <IconButton
         aria-label="Open menu"
         icon="☰"
@@ -80,7 +116,7 @@ const Home = () => {
         _active={{ bg: "gray.100" }}
       />
 
-      {/* Left Sidebar - Desktop - Fixed Position */}
+      {/* Left Sidebar - Desktop */}
       <Box 
         w="250px" 
         bg="gray.50" 
@@ -93,18 +129,6 @@ const Home = () => {
         top="0"
         height="100vh"
         overflowY="auto"
-        css={{
-          '&::-webkit-scrollbar': {
-            width: '4px',
-          },
-          '&::-webkit-scrollbar-track': {
-            width: '6px',
-          },
-          '&::-webkit-scrollbar-thumb': {
-            background: 'gray.400',
-            borderRadius: '24px',
-          },
-        }}
       >
         <Sidebar />
       </Box>
@@ -121,7 +145,7 @@ const Home = () => {
         </DrawerContent>
       </Drawer>
       
-      {/* Main Content - Offset for fixed sidebar */}
+      {/* Main Content */}
       <Flex 
         flex="1" 
         justifyContent="center" 
@@ -129,12 +153,15 @@ const Home = () => {
         ml={{ base: 0, lg: "250px" }}
       >
         <VStack w="95%" maxW="600px" alignItems="start" gap="20px" mt={{ base: "60px", lg: "50px" }} pb="50px">
-          <Heading>Posts</Heading>
+          <Heading>Home Feed</Heading>
+          
           {loading ? (
-            <Text>Loading...</Text>
+            <VStack w="100%" py="40px">
+              <Text>Loading posts...</Text>
+            </VStack>
           ) : posts.length > 0 ? (
-            posts.map((post) => {
-              return (
+            <>
+              {posts.map((post) => (
                 <Post
                   key={post.id}
                   id={post.id}
@@ -143,19 +170,33 @@ const Home = () => {
                   formatted_date={post.formatted_date}
                   liked={post.liked}
                   like_count={post.like_count}
+                  comment_count={post.comment_count || 0}
                 />
-              );
-            })
+              ))}
+              
+              {nextPage && (
+                <Button 
+                  onClick={loadMorePosts} 
+                  w="100%" 
+                  isLoading={loadingMore}
+                  loadingText="Loading more posts..."
+                >
+                  Load More
+                </Button>
+              )}
+            </>
           ) : (
-            <Text color="gray.500" textAlign="center" w="100%" py="40px">
-              No posts found
-            </Text>
-          )}
-
-          {nextPage && !loading && (
-            <Button onClick={loadMorePosts} w="100%">
-              Load More
-            </Button>
+            <VStack w="100%" py="40px" spacing={4}>
+              <Text color="gray.500" textAlign="center">
+                No posts found
+              </Text>
+              <Button 
+                colorScheme="blue" 
+                onClick={() => window.location.href = '/create/post'}
+              >
+                Create Your First Post
+              </Button>
+            </VStack>
           )}
         </VStack>
       </Flex>
@@ -178,14 +219,16 @@ const Sidebar = ({ onItemClick }) => {
     { label: "Home", icon: "🏠", path: "/" },
     { label: "Search", icon: "🔍", path: "/search" },
     { label: "Create Post", icon: "✏️", path: "/create/post" },
-    { label: "Messages", icon: "💬", path: "/" },
+    { label: "Profile", icon: "👤", path: `/user/${currentUser?.username || ''}` },
     { label: "Settings", icon: "⚙️", path: "/settings" },
-    { label: "Subscriptions", icon: "👤", path: "/subscriptions" },
   ];
 
   const handleItemClick = (path) => {
     if (onItemClick) {
       onItemClick();
+    }
+    if (currentUser && path.includes('/user/') && !currentUser.username) {
+      return; // Don't navigate if no username
     }
     window.location.href = path;
   };
@@ -206,6 +249,7 @@ const Sidebar = ({ onItemClick }) => {
           borderRadius="10px"
           _hover={{ bg: "blue.50", color: "blue.600" }}
           onClick={() => handleItemClick(item.path)}
+          isDisabled={item.path.includes('/user/') && !currentUser?.username}
         >
           <HStack spacing="15px">
             <Text fontSize="18px">{item.icon}</Text>
@@ -219,14 +263,11 @@ const Sidebar = ({ onItemClick }) => {
       {/* User info section */}
       <Box mt="auto" pt="20px" borderTop="1px solid" borderColor="gray.200" w="100%">
         <HStack spacing="10px">
-          <Box
-            boxSize="40px"
-            borderRadius="full"
-            bg="gray.300"
-            overflow="hidden"
-          >
-            {/* User avatar would go here */}
-          </Box>
+          <Avatar
+            size="sm"
+            name={currentUser ? `${currentUser.first_name} ${currentUser.last_name}` : "User"}
+            src={currentUser?.profile_image}
+          />
           <VStack align="start" spacing="0">
             <Text fontWeight="bold" fontSize="14px">
               {currentUser ? `${currentUser.first_name} ${currentUser.last_name}` : "Current User"}
