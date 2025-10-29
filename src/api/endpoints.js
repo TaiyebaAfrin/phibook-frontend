@@ -74,12 +74,33 @@ export const toggleLike = async (id) => {
   return response.data;
 };
 
-export const create_post = async (description) => {
-  const response = await api.post("/create_post/", {
-    description: description,
+// export const create_post = async (description) => {
+//   const response = await api.post("/create_post/", {
+//     description: description,
+//   });
+//   return response.data;
+// };
+
+export const create_post = async (formData) => {
+  const response = await api.post("/create_post/", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
   });
   return response.data;
 };
+
+export const get_my_posts = async () => {
+  const userData = localStorage.getItem("userData");
+  if (userData) {
+    const user = JSON.parse(userData);
+    const response = await api.get(`/posts/${user.username}/`);
+    return response.data;
+  }
+  return [];
+};
+
+
+
+
 
 export const get_posts = async () => {
   const response = await api.get(`/get_posts/`);
