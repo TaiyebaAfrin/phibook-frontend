@@ -269,5 +269,3 @@ const Sidebar = ({ onItemClick }) => {
 };
 
 export default Settings;
-
-

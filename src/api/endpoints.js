@@ -43,7 +43,13 @@ export const login = async (username, password) => {
   return response.data;
 };
 
-export const register = async (username, email, firstName, lastName, password) => {
+export const register = async (
+  username,
+  email,
+  firstName,
+  lastName,
+  password
+) => {
   const response = await api.post("/register/", {
     username: username,
     email: email,
@@ -74,36 +80,15 @@ export const toggleLike = async (id) => {
   return response.data;
 };
 
-// export const create_post = async (description) => {
-//   const response = await api.post("/create_post/", {
-//     description: description,
-//   });
-//   return response.data;
-// };
-
-export const create_post = async (formData) => {
-  const response = await api.post("/create_post/", formData, {
-    headers: { "Content-Type": "multipart/form-data" },
+export const create_post = async (description) => {
+  const response = await api.post("/create_post/", {
+    description: description,
   });
   return response.data;
 };
 
-export const get_my_posts = async () => {
-  const userData = localStorage.getItem("userData");
-  if (userData) {
-    const user = JSON.parse(userData);
-    const response = await api.get(`/posts/${user.username}/`);
-    return response.data;
-  }
-  return [];
-};
-
-
-
-
-
-export const get_posts = async () => {
-  const response = await api.get(`/get_posts/`);
+export const get_posts = async (num) => {
+  const response = await api.get(`/get_posts/?page=${num}`);
   return response.data;
 };
 
@@ -121,24 +106,5 @@ export const update_user = async (values) => {
   const response = await api.patch("/update_user/", values, {
     headers: { "Content-Type": "multipart/form-data" },
   });
-  return response.data;
-};
-
-// Comment related endpoints
-export const create_comment = async (post_id, text) => {
-  const response = await api.post("/api/comments/create/", {
-    post_id: post_id,
-    text: text
-  });
-  return response.data;
-};
-
-export const get_post_comments = async (post_id) => {
-  const response = await api.get(`/api/comments/${post_id}/`);
-  return response.data;
-};
-
-export const delete_comment = async (comment_id) => {
-  const response = await api.delete(`/api/comments/delete/${comment_id}/`);
   return response.data;
 };
