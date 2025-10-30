@@ -147,3 +147,28 @@ export const get_users_posts = async (username) => {
     throw handleApiError(error);
   }
 };
+
+
+// api/endpoints.js - Add new endpoints
+export const create_comment = async (post_id, text) => {
+  const response = await api.post("/create_comment/", {
+    post_id: post_id,
+    text: text,
+  });
+  return response.data;
+};
+
+export const get_comments = async (post_id) => {
+  const response = await api.get(`/comments/${post_id}/`);
+  return response.data;
+};
+
+export const delete_comment = async (comment_id) => {
+  const response = await api.delete(`/delete_comment/${comment_id}/`);
+  return response.data;
+};
+
+export const delete_post = async (post_id) => {
+  const response = await api.delete(`/delete_post/${post_id}/`);
+  return response.data;
+};
