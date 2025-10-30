@@ -1,10 +1,7 @@
-import { VStack, Text, HStack, Flex, Box } from "@chakra-ui/react";
-
+import { VStack, Text, HStack, Flex, Box, useToast } from "@chakra-ui/react";
 import { FaHeart } from "react-icons/fa";
 import { FaRegHeart } from "react-icons/fa";
-
 import { toggleLike } from "../api/endpoints";
-
 import { useState } from "react";
 
 const Post = ({
@@ -17,25 +14,54 @@ const Post = ({
 }) => {
   const [clientLiked, setClientLiked] = useState(liked);
   const [clientLikeCount, setClientLikeCount] = useState(like_count);
+  const [isLoading, setIsLoading] = useState(false);
+  const toast = useToast();
 
   const handleToggleLike = async () => {
-    const data = await toggleLike(id);
-    if (data.now_liked) {
-      setClientLiked(true);
-      setClientLikeCount(clientLikeCount + 1);
-    } else {
-      setClientLiked(false);
-      setClientLikeCount(clientLikeCount - 1);
+    if (isLoading) return;
+    
+    setIsLoading(true);
+    
+    // Optimistic update
+    const previousLiked = clientLiked;
+    const previousLikeCount = clientLikeCount;
+    
+    setClientLiked(!clientLiked);
+    setClientLikeCount(clientLiked ? clientLikeCount - 1 : clientLikeCount + 1);
+
+    try {
+      const data = await toggleLike(id);
+      if (!data.now_liked === clientLiked) {
+        // Revert if response doesn't match
+        setClientLiked(previousLiked);
+        setClientLikeCount(previousLikeCount);
+      }
+    } catch (error) {
+      // Revert on error
+      setClientLiked(previousLiked);
+      setClientLikeCount(previousLikeCount);
+      
+      toast({
+        title: "Error",
+        description: error.message || "Failed to like post",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <VStack
       w="400px"
-      h="400px"
+      minH="400px"
       border="1px solid"
       borderColor="gray.400"
       borderRadius="8px"
+      bg="white"
+      boxShadow="sm"
     >
       <HStack
         w="100%"
@@ -45,18 +71,31 @@ const Post = ({
         p="0 20px"
         bg="gray.50"
         borderRadius="8px 8px 0 0"
+        minH="60px"
       >
-        <Text>@{username}</Text>
+        <Text 
+          fontWeight="medium" 
+          cursor="pointer"
+          onClick={() => window.location.href = `/${username}`}
+          _hover={{ textDecoration: 'underline', color: 'blue.600' }}
+        >
+          @{username}
+        </Text>
       </HStack>
+      
       <Flex
         flex="6"
         w="100%"
-        h="100%"
+        minH="200px"
         justifyContent="center"
         alignItems="center"
+        p={4}
       >
-        <Text textAlign="center">{description}</Text>
+        <Text textAlign="center" fontSize="lg" lineHeight="1.6">
+          {description}
+        </Text>
       </Flex>
+      
       <Flex
         flex="2"
         w="100%"
@@ -66,21 +105,31 @@ const Post = ({
         bg="gray.50"
         borderColor="gray.400"
         borderRadius="0 0 8px 8px"
+        minH="80px"
       >
         <HStack w="90%" justifyContent="space-between">
-          <HStack>
-            <Box>
+          <HStack spacing={3}>
+            <Box 
+              cursor={isLoading ? "not-allowed" : "pointer"} 
+              opacity={isLoading ? 0.6 : 1}
+            >
               {clientLiked ? (
-                <Box color="red">
+                <Box color="red.500" fontSize="20px">
                   <FaHeart onClick={handleToggleLike} />
                 </Box>
               ) : (
-                <FaRegHeart onClick={handleToggleLike} />
+                <Box fontSize="20px" color="gray.600">
+                  <FaRegHeart onClick={handleToggleLike} />
+                </Box>
               )}
             </Box>
-            <Text>{clientLikeCount}</Text>
+            <Text fontWeight="medium" fontSize="lg">
+              {clientLikeCount}
+            </Text>
           </HStack>
-          <Text>{formatted_date}</Text>
+          <Text color="gray.600" fontSize="sm" fontWeight="medium">
+            {formatted_date}
+          </Text>
         </HStack>
       </Flex>
     </VStack>

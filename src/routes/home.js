@@ -15,54 +15,103 @@ import {
   DrawerContent,
   DrawerCloseButton,
   IconButton,
-  useDisclosure 
+  useDisclosure,
+  useToast,
+  Skeleton,
+  SkeletonText,
+  SkeletonCircle
 } from "@chakra-ui/react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { get_posts } from "../api/endpoints";
 import Post from "../components/post";
 
 const Home = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [nextPage, setNextPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [error, setError] = useState(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const toast = useToast();
   
   // Responsive values
   const sidebarDisplay = useBreakpointValue({ base: "none", lg: "block" });
   const mainPadding = useBreakpointValue({ base: "10px", md: "20px" });
 
+  // Load initial data
+  const fetchPosts = useCallback(async (page = 1, isLoadMore = false) => {
+    if (isLoadMore) {
+      setLoadingMore(true);
+    } else {
+      setLoading(true);
+    }
+    setError(null);
+
+    try {
+      const data = await get_posts(page);
+      
+      if (isLoadMore) {
+        setPosts(prevPosts => [...prevPosts, ...data.results]);
+      } else {
+        setPosts(data.results);
+      }
+      
+      setNextPage(data.next ? page + 1 : null);
+      setHasMore(!!data.next);
+      
+    } catch (err) {
+      setError(err.message);
+      toast({
+        title: "Error loading posts",
+        description: err.message,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  }, [toast]);
+
   // Load initial data on component mount
   useEffect(() => {
-    const fetchInitialData = async () => {
-      try {
-        const data = await get_posts(1);
-        setPosts(data.results);
-        setNextPage(data.next ? 2 : null);
-      } catch {
-        alert("error getting posts");
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchInitialData();
-  }, []);
+    fetchPosts(1, false);
+  }, [fetchPosts]);
 
   const loadMorePosts = async () => {
-    if (nextPage) {
-      try {
-        const data = await get_posts(nextPage);
-        setPosts(prevPosts => [...prevPosts, ...data.results]);
-        setNextPage(data.next ? nextPage + 1 : null);
-      } catch {
-        alert("error getting more posts");
-      }
+    if (nextPage && hasMore && !loadingMore) {
+      await fetchPosts(nextPage, true);
     }
   };
 
+  // Post Skeleton Loader Component
+  const PostSkeleton = () => (
+    <VStack
+      w="400px"
+      h="400px"
+      border="1px solid"
+      borderColor="gray.200"
+      borderRadius="8px"
+      p={4}
+      spacing={4}
+    >
+      <HStack w="100%">
+        <SkeletonCircle size="10" />
+        <SkeletonText noOfLines={1} width="100px" />
+      </HStack>
+      <SkeletonText flex="1" w="100%" noOfLines={4} spacing={3} />
+      <HStack w="100%" justify="space-between">
+        <Skeleton width="60px" height="20px" />
+        <Skeleton width="80px" height="20px" />
+      </HStack>
+    </VStack>
+  );
+
   return (
     <Flex w="100%" minH="100vh">
-      {/* Mobile Menu Button - Black and White */}
+      {/* Mobile Menu Button */}
       <IconButton
         aria-label="Open menu"
         icon="☰"
@@ -80,7 +129,7 @@ const Home = () => {
         _active={{ bg: "gray.100" }}
       />
 
-      {/* Left Sidebar - Desktop - Fixed Position */}
+      {/* Left Sidebar - Desktop */}
       <Box 
         w="250px" 
         bg="gray.50" 
@@ -93,18 +142,6 @@ const Home = () => {
         top="0"
         height="100vh"
         overflowY="auto"
-        css={{
-          '&::-webkit-scrollbar': {
-            width: '4px',
-          },
-          '&::-webkit-scrollbar-track': {
-            width: '6px',
-          },
-          '&::-webkit-scrollbar-thumb': {
-            background: 'gray.400',
-            borderRadius: '24px',
-          },
-        }}
       >
         <Sidebar />
       </Box>
@@ -121,7 +158,7 @@ const Home = () => {
         </DrawerContent>
       </Drawer>
       
-      {/* Main Content - Offset for fixed sidebar */}
+      {/* Main Content */}
       <Flex 
         flex="1" 
         justifyContent="center" 
@@ -130,11 +167,32 @@ const Home = () => {
       >
         <VStack w="95%" maxW="600px" alignItems="start" gap="20px" mt={{ base: "60px", lg: "50px" }} pb="50px">
           <Heading>Posts</Heading>
+          
+          {error && (
+            <Box w="100%" p={4} bg="red.50" border="1px solid" borderColor="red.200" borderRadius="md">
+              <Text color="red.600">{error}</Text>
+              <Button 
+                mt={2} 
+                colorScheme="red" 
+                size="sm" 
+                onClick={() => fetchPosts(1, false)}
+              >
+                Retry
+              </Button>
+            </Box>
+          )}
+
           {loading ? (
-            <Text>Loading...</Text>
+            // Show skeleton loaders for initial load
+            <VStack w="100%" spacing={4}>
+              {[...Array(3)].map((_, index) => (
+                <PostSkeleton key={index} />
+              ))}
+            </VStack>
           ) : posts.length > 0 ? (
-            posts.map((post) => {
-              return (
+            <>
+              {/* Show actual posts */}
+              {posts.map((post) => (
                 <Post
                   key={post.id}
                   id={post.id}
@@ -144,24 +202,43 @@ const Home = () => {
                   liked={post.liked}
                   like_count={post.like_count}
                 />
-              );
-            })
+              ))}
+              
+              {/* Load more section */}
+              {hasMore && (
+                <Flex w="100%" justify="center" mt={4}>
+                  {loadingMore ? (
+                    <VStack spacing={4}>
+                      <PostSkeleton />
+                      <Text color="gray.500">Loading more posts...</Text>
+                    </VStack>
+                  ) : (
+                    <Button onClick={loadMorePosts} colorScheme="blue">
+                      Load More Posts
+                    </Button>
+                  )}
+                </Flex>
+              )}
+            </>
           ) : (
-            <Text color="gray.500" textAlign="center" w="100%" py="40px">
-              No posts found
-            </Text>
-          )}
-
-          {nextPage && !loading && (
-            <Button onClick={loadMorePosts} w="100%">
-              Load More
-            </Button>
+            <Box w="100%" textAlign="center" py={10}>
+              <Text color="gray.500" fontSize="lg">
+                No posts found
+              </Text>
+              <Text color="gray.400" mt={2}>
+                Be the first to create a post!
+              </Text>
+            </Box>
           )}
         </VStack>
       </Flex>
     </Flex>
   );
 };
+
+// ... Sidebar component remains the same as your original code
+
+
 
 // Sidebar Component
 const Sidebar = ({ onItemClick }) => {

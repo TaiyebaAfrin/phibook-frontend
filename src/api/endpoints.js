@@ -70,10 +70,7 @@ export const toggleFollow = async (username) => {
   return response.data;
 };
 
-export const get_users_posts = async (username) => {
-  const response = await api.get(`/posts/${username}/`);
-  return response.data;
-};
+
 
 export const toggleLike = async (id) => {
   const response = await api.post("/toggleLike/", { id: id });
@@ -87,10 +84,6 @@ export const create_post = async (description) => {
   return response.data;
 };
 
-export const get_posts = async (num) => {
-  const response = await api.get(`/get_posts/?page=${num}`);
-  return response.data;
-};
 
 export const search_users = async (search) => {
   const response = await api.get(`/search/?query=${search}`);
@@ -107,4 +100,50 @@ export const update_user = async (values) => {
     headers: { "Content-Type": "multipart/form-data" },
   });
   return response.data;
+};
+
+
+// endpoints.js - Enhanced with better error handling
+const handleApiError = (error) => {
+  if (error.response) {
+    // Server responded with error status
+    const { status, data } = error.response;
+    
+    switch (status) {
+      case 401:
+        // Unauthorized - redirect to login
+        window.location.href = "/login";
+        throw new Error('Please login again');
+      case 404:
+        throw new Error('Resource not found');
+      case 500:
+        throw new Error('Server error. Please try again later.');
+      default:
+        throw new Error(data.error || 'Something went wrong');
+    }
+  } else if (error.request) {
+    // Network error
+    throw new Error('Network error. Please check your connection.');
+  } else {
+    // Other errors
+    throw new Error('An unexpected error occurred');
+  }
+};
+
+export const get_posts = async (num = 1) => {
+  try {
+    const response = await api.get(`/get_posts/?page=${num}`);
+    return response.data;
+  } catch (error) {
+    throw handleApiError(error);
+  }
+};
+
+export const get_users_posts = async (username) => {
+  try {
+    const response = await api.get(`/posts/${username}/`);
+    return response.data;
+  } catch (error) {
+    throw handleApiError(error);
+  }
 };
