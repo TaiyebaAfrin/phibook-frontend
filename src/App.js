@@ -16,6 +16,7 @@ import Search from './routes/search';
 import Settings from './routes/settings';
 import Subscriptions from "./routes/subscriptions";
 
+
 import { AuthProvider } from './contexts/useAuth';
 
 function App() {
