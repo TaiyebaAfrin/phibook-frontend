@@ -139,7 +139,7 @@ const Subscriptions = () => {
 
   const handlePayment = () => {
     // Simple direct redirect to payment URL
-    window.location.href = "http://127.0.0.1:8000/api/payment/initiate";
+    window.location.href = "https://phibook-backend.vercel.app/api/payment/initiate";
   };
 
   return (
