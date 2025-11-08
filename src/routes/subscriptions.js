@@ -1,3 +1,353 @@
+
+import {
+  Button,
+  VStack,
+  Text,
+  Box,
+  Alert,
+  AlertIcon,
+  List,
+  ListItem,
+  Flex,
+  Heading,
+  HStack,
+  Spacer,
+  useBreakpointValue,
+  Drawer,
+  DrawerBody,
+  DrawerHeader,
+  DrawerOverlay,
+  DrawerContent,
+  DrawerCloseButton,
+  IconButton,
+  useDisclosure,
+} from "@chakra-ui/react";
+import { useState, useEffect } from "react";
+
+const Subscriptions = () => {
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  
+  // Responsive values
+  const sidebarDisplay = useBreakpointValue({ base: "none", lg: "block" });
+  const mainPadding = useBreakpointValue({ base: "10px", md: "20px" });
+
+  const plan = {
+    name: "Pro",
+    price: "TK 2000/month",
+    description: "Perfect for professionals and growing businesses",
+    features: [
+      "Unlimited posts and content",
+      "Advanced analytics dashboard",
+      "Priority email support",
+      "Custom branding options",
+      "API access",
+      "Team collaboration tools"
+    ],
+  };
+
+  const handlePayment = () => {
+    // Simple direct redirect to payment URL
+    window.location.href = "https://phibook-backend.vercel.app/api/payment/initiate";
+  };
+
+  return (
+    <Flex w="100%" minH="100vh">
+      {/* Mobile Menu Button */}
+      <IconButton
+        aria-label="Open menu"
+        icon="☰"
+        position="fixed"
+        top="20px"
+        left="20px"
+        zIndex="1000"
+        display={{ base: "block", lg: "none" }}
+        onClick={onOpen}
+      />
+
+      {/* Left Sidebar - Desktop */}
+      <Box 
+        w="250px" 
+        bg="gray.50" 
+        p="20px" 
+        borderRight="1px solid" 
+        borderColor="gray.200"
+        display={sidebarDisplay}
+      >
+        <Sidebar />
+      </Box>
+      
+      {/* Mobile Sidebar Drawer */}
+      <Drawer isOpen={isOpen} placement="left" onClose={onClose}>
+        <DrawerOverlay />
+        <DrawerContent>
+          <DrawerCloseButton />
+          <DrawerHeader>PhiBook</DrawerHeader>
+          <DrawerBody>
+            <Sidebar onItemClick={onClose} />
+          </DrawerBody>
+        </DrawerContent>
+      </Drawer>
+      
+      {/* Main Content */}
+      <Flex flex="1" justifyContent="center" p={mainPadding} ml={{ base: 0, lg: 0 }}>
+        <VStack spacing={8} w="100%" maxW="800px" mt={{ base: "60px", lg: "50px" }}>
+          <VStack spacing={3}>
+            <Text fontSize="3xl" fontWeight="bold" textAlign="center">
+              Choose Your Plan
+            </Text>
+            <Text fontSize="lg" color="gray.600" textAlign="center">
+              Start with our most popular plan
+            </Text>
+          </VStack>
+
+          {/* Payment Test Card Information */}
+          <Alert status="info" borderRadius="lg" maxW="500px">
+            <AlertIcon />
+            <VStack align="start" spacing={2}>
+              <Text fontWeight="bold">Test Card Information (SSLCommerz):</Text>
+              <List spacing={1} styleType="none">
+                <ListItem>💳 <strong>Card Number:</strong> 4111 1111 1111 1111</ListItem>
+                <ListItem>📅 <strong>Expiry Date:</strong> Any future date (MM/YY)</ListItem>
+                <ListItem>🔒 <strong>CVV:</strong> 123</ListItem>
+                <ListItem>🏦 <strong>OTP:</strong> 123456</ListItem>
+              </List>
+            </VStack>
+          </Alert>
+
+          <Box
+            borderWidth="2px"
+            borderColor="blue.300"
+            borderRadius="xl"
+            p={8}
+            width="100%"
+            maxW="500px"
+            textAlign="center"
+            boxShadow="xl"
+            _hover={{
+              boxShadow: "2xl",
+              transform: "translateY(-5px)",
+              borderColor: "blue.500",
+            }}
+            transition="all 0.3s ease"
+            bg="white"
+            position="relative"
+          >
+            {/* Popular Badge */}
+            <Box
+              position="absolute"
+              top="-12px"
+              left="50%"
+              transform="translateX(-50%)"
+              bg="blue.500"
+              color="white"
+              px={4}
+              py={1}
+              borderRadius="full"
+              fontSize="sm"
+              fontWeight="bold"
+            >
+              MOST POPULAR
+            </Box>
+
+            <Text fontSize="2xl" fontWeight="bold" color="blue.600" mb={2}>
+              {plan.name}
+            </Text>
+            <Text fontSize="3xl" fontWeight="bold" color="gray.800" my={3}>
+              {plan.price}
+            </Text>
+            <Text color="gray.600" mb={6} fontSize="md">
+              {plan.description}
+            </Text>
+
+            <VStack spacing={3} mb={6} alignItems="start">
+              {plan.features.map((feature, featureIndex) => (
+                <Text key={featureIndex} fontSize="sm" color="gray.700">
+                  ✓ {feature}
+                </Text>
+              ))}
+            </VStack>
+
+            <Button
+              colorScheme="blue"
+              width="100%"
+              size="lg"
+              onClick={handlePayment}
+              _hover={{ transform: "scale(1.05)" }}
+              transition="all 0.2s"
+            >
+              Pay Now - {plan.price}
+            </Button>
+          </Box>
+
+          {/* Additional Info */}
+          <Box
+            mt={8}
+            p={6}
+            borderWidth="1px"
+            borderRadius="lg"
+            bg="blue.50"
+            borderColor="blue.200"
+            width="100%"
+            maxW="500px"
+          >
+            <Text
+              fontSize="lg"
+              fontWeight="bold"
+              color="blue.800"
+              textAlign="center"
+            >
+              💳 14-day money-back guarantee • Cancel anytime • No hidden fees
+            </Text>
+          </Box>
+
+          {/* Security Notice */}
+          <Box
+            p={4}
+            borderWidth="1px"
+            borderRadius="lg"
+            bg="green.50"
+            borderColor="green.200"
+            width="100%"
+            maxW="500px"
+          >
+            <Text fontSize="sm" color="green.800" textAlign="center">
+              🔒 Your payment is secured with SSL encryption. We never store your card details.
+            </Text>
+          </Box>
+        </VStack>
+      </Flex>
+    </Flex>
+  );
+};
+
+// Sidebar Component
+const Sidebar = ({ onItemClick }) => {
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    const userData = localStorage.getItem("userData");
+    if (userData) {
+      setCurrentUser(JSON.parse(userData));
+    }
+  }, []);
+
+  const menuItems = [
+    { label: "Home", icon: "🏠", path: "/" },
+    { label: "Search", icon: "🔍", path: "/search" },
+    { label: "Create Post", icon: "✏️", path: "/create/post" },
+    { label: "Messages", icon: "💬", path: "/" },
+    { label: "Settings", icon: "⚙️", path: "/settings" },
+    { label: "Subscriptions", icon: "👤", path: "/subscriptions" },
+  ];
+
+  // Function to get first letter of username
+  const getFirstLetter = (username) => {
+    return username ? username.charAt(0).toUpperCase() : "U";
+  };
+
+  const handleItemClick = (path) => {
+    if (onItemClick) {
+      onItemClick();
+    }
+    window.location.href = path;
+  };
+
+  return (
+    <VStack align="start" spacing="20px" h="100%">
+      <Heading size="lg" mb="30px" color="blue.600" display={{ base: "none", lg: "block" }}>
+        PhiBook
+      </Heading>
+      
+      {menuItems.map((item, index) => (
+        <Button
+          key={index}
+          variant="ghost"
+          justifyContent="start"
+          w="100%"
+          p="10px 15px"
+          borderRadius="10px"
+          _hover={{ bg: "blue.50", color: "blue.600" }}
+          onClick={() => handleItemClick(item.path)}
+        >
+          <HStack spacing="15px">
+            <Text fontSize="18px">{item.icon}</Text>
+            <Text fontWeight="medium">{item.label}</Text>
+          </HStack>
+        </Button>
+      ))}
+      
+      <Spacer />
+      
+      {/* User info section */}
+      <Box mt="auto" pt="20px" borderTop="1px solid" borderColor="gray.200" w="100%">
+        <HStack spacing="10px">
+          <Flex
+            boxSize="40px"
+            borderRadius="full"
+            bg="blue.500"
+            overflow="hidden"
+            align="center"
+            justify="center"
+            color="white"
+            fontWeight="bold"
+            fontSize="16px"
+          >
+            {currentUser ? getFirstLetter(currentUser.username) : "U"}
+          </Flex>
+          <VStack align="start" spacing="0">
+            <Text fontWeight="bold" fontSize="14px">
+              {currentUser ? `${currentUser.first_name} ${currentUser.last_name}` : "Current User"}
+            </Text>
+            <Text fontSize="12px" color="gray.600">
+              @{currentUser ? currentUser.username : "username"}
+            </Text>
+          </VStack>
+        </HStack>
+      </Box>
+    </VStack>
+  );
+};
+
+export default Subscriptions;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // import { Button, VStack, Text, Box, HStack } from "@chakra-ui/react";
 
 // const Subscriptions = () => {
@@ -120,155 +470,156 @@
 // };
 
 // export default Subscriptions;
-import { Button, VStack, Text, Box, Alert, AlertIcon, List, ListItem } from "@chakra-ui/react";
 
-const Subscriptions = () => {
-  const plan = {
-    name: "Pro",
-    price: "TK 2000/month",
-    description: "Perfect for professionals and growing businesses",
-    features: [
-      "Unlimited posts and content",
-      "Advanced analytics dashboard",
-      "Priority email support",
-      "Custom branding options",
-      "API access",
-      "Team collaboration tools"
-    ],
-  };
+// import { Button, VStack, Text, Box, Alert, AlertIcon, List, ListItem } from "@chakra-ui/react";
 
-  const handlePayment = () => {
-    // Simple direct redirect to payment URL
-    window.location.href = "https://phibook-backend.vercel.app/api/payment/initiate";
-  };
+// const Subscriptions = () => {
+//   const plan = {
+//     name: "Pro",
+//     price: "TK 2000/month",
+//     description: "Perfect for professionals and growing businesses",
+//     features: [
+//       "Unlimited posts and content",
+//       "Advanced analytics dashboard",
+//       "Priority email support",
+//       "Custom branding options",
+//       "API access",
+//       "Team collaboration tools"
+//     ],
+//   };
 
-  return (
-    <VStack spacing={8} p={6} w="100%" maxW="800px" mx="auto">
-      <VStack spacing={3}>
-        <Text fontSize="3xl" fontWeight="bold" textAlign="center">
-          Choose Your Plan
-        </Text>
-        <Text fontSize="lg" color="gray.600" textAlign="center">
-          Start with our most popular plan
-        </Text>
-      </VStack>
+//   const handlePayment = () => {
+//     // Simple direct redirect to payment URL
+//     window.location.href = "https://phibook-backend.vercel.app/api/payment/initiate";
+//   };
 
-      {/* Payment Test Card Information */}
-      <Alert status="info" borderRadius="lg" maxW="500px">
-        <AlertIcon />
-        <VStack align="start" spacing={2}>
-          <Text fontWeight="bold">Test Card Information (SSLCommerz):</Text>
-          <List spacing={1} styleType="none">
-            <ListItem>💳 <strong>Card Number:</strong> 4111 1111 1111 1111</ListItem>
-            <ListItem>📅 <strong>Expiry Date:</strong> Any future date (MM/YY)</ListItem>
-            <ListItem>🔒 <strong>CVV:</strong> 123</ListItem>
-            <ListItem>🏦 <strong>OTP:</strong> 123456</ListItem>
-          </List>
-        </VStack>
-      </Alert>
+//   return (
+//     <VStack spacing={8} p={6} w="100%" maxW="800px" mx="auto">
+//       <VStack spacing={3}>
+//         <Text fontSize="3xl" fontWeight="bold" textAlign="center">
+//           Choose Your Plan
+//         </Text>
+//         <Text fontSize="lg" color="gray.600" textAlign="center">
+//           Start with our most popular plan
+//         </Text>
+//       </VStack>
 
-      <Box
-        borderWidth="2px"
-        borderColor="blue.300"
-        borderRadius="xl"
-        p={8}
-        width="100%"
-        maxW="500px"
-        textAlign="center"
-        boxShadow="xl"
-        _hover={{
-          boxShadow: "2xl",
-          transform: "translateY(-5px)",
-          borderColor: "blue.500",
-        }}
-        transition="all 0.3s ease"
-        bg="white"
-        position="relative"
-      >
-        {/* Popular Badge */}
-        <Box
-          position="absolute"
-          top="-12px"
-          left="50%"
-          transform="translateX(-50%)"
-          bg="blue.500"
-          color="white"
-          px={4}
-          py={1}
-          borderRadius="full"
-          fontSize="sm"
-          fontWeight="bold"
-        >
-          MOST POPULAR
-        </Box>
+//       {/* Payment Test Card Information */}
+//       <Alert status="info" borderRadius="lg" maxW="500px">
+//         <AlertIcon />
+//         <VStack align="start" spacing={2}>
+//           <Text fontWeight="bold">Test Card Information (SSLCommerz):</Text>
+//           <List spacing={1} styleType="none">
+//             <ListItem>💳 <strong>Card Number:</strong> 4111 1111 1111 1111</ListItem>
+//             <ListItem>📅 <strong>Expiry Date:</strong> Any future date (MM/YY)</ListItem>
+//             <ListItem>🔒 <strong>CVV:</strong> 123</ListItem>
+//             <ListItem>🏦 <strong>OTP:</strong> 123456</ListItem>
+//           </List>
+//         </VStack>
+//       </Alert>
 
-        <Text fontSize="2xl" fontWeight="bold" color="blue.600" mb={2}>
-          {plan.name}
-        </Text>
-        <Text fontSize="3xl" fontWeight="bold" color="gray.800" my={3}>
-          {plan.price}
-        </Text>
-        <Text color="gray.600" mb={6} fontSize="md">
-          {plan.description}
-        </Text>
+//       <Box
+//         borderWidth="2px"
+//         borderColor="blue.300"
+//         borderRadius="xl"
+//         p={8}
+//         width="100%"
+//         maxW="500px"
+//         textAlign="center"
+//         boxShadow="xl"
+//         _hover={{
+//           boxShadow: "2xl",
+//           transform: "translateY(-5px)",
+//           borderColor: "blue.500",
+//         }}
+//         transition="all 0.3s ease"
+//         bg="white"
+//         position="relative"
+//       >
+//         {/* Popular Badge */}
+//         <Box
+//           position="absolute"
+//           top="-12px"
+//           left="50%"
+//           transform="translateX(-50%)"
+//           bg="blue.500"
+//           color="white"
+//           px={4}
+//           py={1}
+//           borderRadius="full"
+//           fontSize="sm"
+//           fontWeight="bold"
+//         >
+//           MOST POPULAR
+//         </Box>
 
-        <VStack spacing={3} mb={6} alignItems="start">
-          {plan.features.map((feature, featureIndex) => (
-            <Text key={featureIndex} fontSize="sm" color="gray.700">
-              ✓ {feature}
-            </Text>
-          ))}
-        </VStack>
+//         <Text fontSize="2xl" fontWeight="bold" color="blue.600" mb={2}>
+//           {plan.name}
+//         </Text>
+//         <Text fontSize="3xl" fontWeight="bold" color="gray.800" my={3}>
+//           {plan.price}
+//         </Text>
+//         <Text color="gray.600" mb={6} fontSize="md">
+//           {plan.description}
+//         </Text>
 
-        <Button
-          colorScheme="blue"
-          width="100%"
-          size="lg"
-          onClick={handlePayment}
-          _hover={{ transform: "scale(1.05)" }}
-          transition="all 0.2s"
-        >
-          Pay Now - {plan.price}
-        </Button>
-      </Box>
+//         <VStack spacing={3} mb={6} alignItems="start">
+//           {plan.features.map((feature, featureIndex) => (
+//             <Text key={featureIndex} fontSize="sm" color="gray.700">
+//               ✓ {feature}
+//             </Text>
+//           ))}
+//         </VStack>
 
-      {/* Additional Info */}
-      <Box
-        mt={8}
-        p={6}
-        borderWidth="1px"
-        borderRadius="lg"
-        bg="blue.50"
-        borderColor="blue.200"
-        width="100%"
-        maxW="500px"
-      >
-        <Text
-          fontSize="lg"
-          fontWeight="bold"
-          color="blue.800"
-          textAlign="center"
-        >
-          💳 14-day money-back guarantee • Cancel anytime • No hidden fees
-        </Text>
-      </Box>
+//         <Button
+//           colorScheme="blue"
+//           width="100%"
+//           size="lg"
+//           onClick={handlePayment}
+//           _hover={{ transform: "scale(1.05)" }}
+//           transition="all 0.2s"
+//         >
+//           Pay Now - {plan.price}
+//         </Button>
+//       </Box>
 
-      {/* Security Notice */}
-      <Box
-        p={4}
-        borderWidth="1px"
-        borderRadius="lg"
-        bg="green.50"
-        borderColor="green.200"
-        width="100%"
-        maxW="500px"
-      >
-        <Text fontSize="sm" color="green.800" textAlign="center">
-          🔒 Your payment is secured with SSL encryption. We never store your card details.
-        </Text>
-      </Box>
-    </VStack>
-  );
-};
+//       {/* Additional Info */}
+//       <Box
+//         mt={8}
+//         p={6}
+//         borderWidth="1px"
+//         borderRadius="lg"
+//         bg="blue.50"
+//         borderColor="blue.200"
+//         width="100%"
+//         maxW="500px"
+//       >
+//         <Text
+//           fontSize="lg"
+//           fontWeight="bold"
+//           color="blue.800"
+//           textAlign="center"
+//         >
+//           💳 14-day money-back guarantee • Cancel anytime • No hidden fees
+//         </Text>
+//       </Box>
 
-export default Subscriptions;
+//       {/* Security Notice */}
+//       <Box
+//         p={4}
+//         borderWidth="1px"
+//         borderRadius="lg"
+//         bg="green.50"
+//         borderColor="green.200"
+//         width="100%"
+//         maxW="500px"
+//       >
+//         <Text fontSize="sm" color="green.800" textAlign="center">
+//           🔒 Your payment is secured with SSL encryption. We never store your card details.
+//         </Text>
+//       </Box>
+//     </VStack>
+//   );
+// };
+
+// export default Subscriptions;
